@@ -1,0 +1,47 @@
+;
+; 監視対象機器への SSH ログインマクロ
+;
+; ターミナル上で IP アドレス、ユーザー名を使用したログインコマンドを作成するのが面倒だったので
+; ログイン情報を聞いてくれるようにしてみた。
+;
+
+inputbox "ログイン先 IP アドレスを入力 (中断する場合は空白にしてOKを押す)" "SIEマクロ"
+hostname = inputstr
+
+; 入力値確認
+strlen hostname
+if result=0 goto interruption
+
+inputbox "ログインユーザー名を入力 (中断する場合は空白にしてOKを押す)" "SIEマクロ"
+username = inputstr
+
+; 入力値確認
+strlen username
+if result=0 goto interruption
+
+inputbox "ログインパスワードを入力 (中断する場合は空白にしてOKを押す)" "SIEマクロ"
+password = inputstr
+
+; 入力値確認
+strlen password
+if result=0 goto interruption
+
+; SSH ログイン
+sprintf2 cmd "ssh -o StrictHostKeyChecking=no %s@%s" username hostname
+sendln cmd
+
+; SSH ログインできなかった時にマクロが終了しなくなってしまうのがイヤなので
+; 文字列 password が表示されるまでのタイムアウト値を 5 秒にセット
+timeout = 5
+wait 'password:'
+if result=0 goto time_out
+sendln password
+goto end
+
+:interruption
+messagebox "ログイン処理を中断します。" "SIEマクロ"
+
+:time_out
+messagebox "ログイン処理を中断します。(Timeout)" "SIEマクロ"
+
+:end
